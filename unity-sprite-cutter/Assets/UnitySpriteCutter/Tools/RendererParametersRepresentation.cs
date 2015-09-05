@@ -12,6 +12,7 @@ namespace UnitySpriteCutter.Tools {
 
 		Sprite sprite;
 		Texture2D texture;
+		Color color;
 		
 		public void CopyFrom( SpriteRenderer from ) {
 			sharedMaterials = from.sharedMaterials;
@@ -22,6 +23,7 @@ namespace UnitySpriteCutter.Tools {
 			enabled = from.enabled;
 			sprite = from.sprite;
 			texture = from.sprite.texture;
+			color = from.color;
 		}
 		
 		public void CopyFrom( MeshRenderer from ) {
@@ -33,6 +35,7 @@ namespace UnitySpriteCutter.Tools {
 			enabled = from.enabled;
 			sprite = null;
 			texture = from.material.GetTexture( "_MainTex" ) as Texture2D;
+			color = from.material.color;
 		}
 		
 		public void PasteTo( SpriteRenderer to ) {
@@ -42,6 +45,8 @@ namespace UnitySpriteCutter.Tools {
 			to.sortingLayerID = sortingLayerID;
 			to.hideFlags = hideFlags;
 			to.sprite = sprite;
+			to.color = color;
+			to.enabled = enabled;
 		}
 		
 		public void PasteTo( MeshRenderer to ) {
@@ -51,6 +56,7 @@ namespace UnitySpriteCutter.Tools {
 			to.sortingLayerID = sortingLayerID;
 			to.hideFlags = hideFlags;
 			to.material.SetTexture( "_MainTex", texture );
+			to.material.color = color;
 			to.enabled = enabled;
 		}
 	}

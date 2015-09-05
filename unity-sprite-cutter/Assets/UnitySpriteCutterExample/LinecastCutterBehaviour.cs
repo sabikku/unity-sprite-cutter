@@ -1,8 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using UnitySpriteCutter;
-[RequireComponent( typeof( LineRenderer ) )]
-public class LinecastCutter : MonoBehaviour {
+
+public class LinecastCutterBehaviour : MonoBehaviour {
 
 	public LayerMask layerMask;
 
@@ -34,13 +34,8 @@ public class LinecastCutter : MonoBehaviour {
 				lineStart = lineStart,
 				lineEnd = lineEnd,
 				gameObject = go,
-				gameObjectCreationMode = SpriteCutterInput.GameObjectCreationMode.CUT_OFF_ONE,
+				gameObjectCreationMode = SpriteCutterInput.GameObjectCreationMode.CUT_OFF_COPY,
 			} );
-
-			if ( output != null && output.secondSideGameObject != null ) {
-				Rigidbody2D newRigidbody = output.secondSideGameObject.AddComponent<Rigidbody2D>();
-				newRigidbody.velocity = output.firstSideGameObject.GetComponent<Rigidbody2D>().velocity;
-			}
 		}
 	}
 

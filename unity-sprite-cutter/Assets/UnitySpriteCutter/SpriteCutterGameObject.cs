@@ -23,12 +23,19 @@ namespace UnitySpriteCutter {
 			result.gameObject = origin;
 			return result;
 		}
-
-		public static SpriteCutterGameObject CreateAsCopyOf( GameObject origin, bool secondSide ) {
+		
+		public static SpriteCutterGameObject CreateNew( GameObject origin, bool secondSide ) {
 			SpriteCutterGameObject result = new SpriteCutterGameObject();
 			result.gameObject = new GameObject( origin.name + ( !secondSide ? "_firstSide" : "_secondSide" ) );
 			result.CopyGameObjectParametersFrom( origin );
 			result.CopyTransformFrom( origin.transform );
+			return result;
+		}
+		
+		public static SpriteCutterGameObject CreateAsInstantiatedCopyOf( GameObject origin, bool secondSide ) {
+			SpriteCutterGameObject result = new SpriteCutterGameObject();
+			result.gameObject = GameObject.Instantiate( origin );
+			result.gameObject.name = origin.name + ( !secondSide ? "_firstSide" : "_secondSide" );
 			return result;
 		}
 		

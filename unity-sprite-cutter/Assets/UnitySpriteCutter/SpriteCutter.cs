@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnitySpriteCutter.Cutters;
 using UnitySpriteCutter.Tools;
+using GameObjectCreationMode = UnitySpriteCutter.SpriteCutterInput.GameObjectCreationMode;
 
 namespace UnitySpriteCutter {
 
@@ -24,14 +25,19 @@ namespace UnitySpriteCutter {
 		public enum GameObjectCreationMode {
 			/// <summary>
 			/// The original gameObject is converted into the "firstSide" gameObject.
-			/// Use this, if you want to cut off a new gameObject from an existing one. Default value.
+			/// Use this, if you want to intantiate new "cutted" gameObject from an existing one. Default value.
 			/// </summary>
-			CUT_OFF_ONE = 0,
+			CUT_OFF_NEW = 0,
+			/// <summary>
+			/// Works as CUT_OFF_ONE, but instead of intantiating an entirelynew GameObject,
+			/// it instantiates a "cutted" copy of the original gameObject.
+			/// </summary>
+			CUT_OFF_COPY = 1,
 			/// <summary>
 			/// The original gameObject stays as it was before cutting.
-			/// Instead, SpriteCutter creates two new gameObjects with first and second side of the cut.
+			/// Instead, SpriteCutter instantiates two new gameObjects with first and second side of the cut.
 			/// </summary>
-			CUT_INTO_TWO = 1,
+			CUT_INTO_TWO = 2,
 		}
 		public GameObjectCreationMode gameObjectCreationMode;
 
@@ -44,6 +50,11 @@ namespace UnitySpriteCutter {
 
 	public static class SpriteCutter {
 
+		struct SideCutData {
+			public Mesh cuttedMesh;
+			public List<PolygonColliderParametersRepresentation> cuttedCollidersRepresentations;
+		}
+
 		/// <summary>
 		/// Returns null, if cutting didn't took place.
 		/// </summary>
@@ -53,7 +64,9 @@ namespace UnitySpriteCutter {
 				Debug.LogWarning( "SpriteCutter.Cut exceuted with null gameObject!" );
 				return null;
 			}
-			
+
+			/* Cutting  mesh and collider */
+
 			Vector3 localLineStart = input.gameObject.transform.InverseTransformPoint( input.lineStart );
 			Vector3 localLineEnd = input.gameObject.transform.InverseTransformPoint( input.lineEnd );
 
@@ -77,31 +90,67 @@ namespace UnitySpriteCutter {
 					return null;
 				}
 			}
+			
+			SideCutData firstCutData = new SideCutData() {
+				cuttedMesh = meshCutResult.firstSideMesh,
+				cuttedCollidersRepresentations = collidersCutResults.firstSideColliderRepresentations
+			};
+			SideCutData secondCutData = new SideCutData() {
+				cuttedMesh = meshCutResult.secondSideMesh,
+				cuttedCollidersRepresentations = collidersCutResults.secondSideColliderRepresentations
+			};
 
-			SpriteCutterGameObject secondSideResult = SpriteCutterGameObject.CreateAsCopyOf( input.gameObject, true );
-			PrepareResultGameObject( secondSideResult, spriteRenderer, meshRenderer,
-			                         meshCutResult.secondSideMesh, collidersCutResults.secondSideColliderRepresentations );
+			/* Second side result - created as new GameObject or instantiated copy of the original GameObject. */
+
+			SpriteCutterGameObject secondSideResult = null;
+			switch ( input.gameObjectCreationMode ) {
+				case GameObjectCreationMode.CUT_OFF_NEW:
+				case GameObjectCreationMode.CUT_INTO_TWO:
+					secondSideResult = SpriteCutterGameObject.CreateNew( input.gameObject, true );
+					PrepareResultGameObject( secondSideResult, spriteRenderer, meshRenderer, secondCutData );
+					break;
+
+				case GameObjectCreationMode.CUT_OFF_COPY:
+					secondSideResult = SpriteCutterGameObject.CreateAsInstantiatedCopyOf( input.gameObject, true );
+					SpriteRenderer copiedSpriteRenderer = secondSideResult.gameObject.GetComponent<SpriteRenderer>();
+				    MeshRenderer copiedMeshRenderer = secondSideResult.gameObject.GetComponent<MeshRenderer>();
+					if ( copiedSpriteRenderer != null ) {
+						RendererParametersRepresentation tempParameters = new RendererParametersRepresentation();
+						tempParameters.CopyFrom( copiedSpriteRenderer );
+						SafeSpriteRendererRemoverBehaviour.get.RemoveAndWaitOneFrame( copiedSpriteRenderer, onFinish: () => {
+								PrepareResultGameObject( secondSideResult, tempParameters, secondCutData );
+						} );
+						
+					} else {
+						PrepareResultGameObject( secondSideResult, copiedSpriteRenderer, copiedMeshRenderer, secondCutData );
+					}
+					break;
+			}
+
+
+			/* First side result */
 
 			SpriteCutterGameObject firstSideResult = null;
-			if ( input.gameObjectCreationMode == SpriteCutterInput.GameObjectCreationMode.CUT_INTO_TWO ) {
-				firstSideResult = SpriteCutterGameObject.CreateAsCopyOf( input.gameObject, true );
-				PrepareResultGameObject( firstSideResult, spriteRenderer, meshRenderer,
-				                         meshCutResult.firstSideMesh, collidersCutResults.firstSideColliderRepresentations );
+			switch ( input.gameObjectCreationMode ) {
+				case GameObjectCreationMode.CUT_OFF_NEW:
+				case GameObjectCreationMode.CUT_OFF_COPY:
+					firstSideResult = SpriteCutterGameObject.CreateAs( input.gameObject );
+					if ( spriteRenderer != null ) {
+						RendererParametersRepresentation tempParameters = new RendererParametersRepresentation();
+						tempParameters.CopyFrom( spriteRenderer );
+						SafeSpriteRendererRemoverBehaviour.get.RemoveAndWaitOneFrame( spriteRenderer, onFinish: () => {
+							PrepareResultGameObject( firstSideResult, tempParameters, firstCutData );
+						} );
+						
+					} else {
+						PrepareResultGameObject( firstSideResult, spriteRenderer, meshRenderer, firstCutData );
+					}
+					break;
 
-			} else if ( input.gameObjectCreationMode == SpriteCutterInput.GameObjectCreationMode.CUT_OFF_ONE ) {
-				firstSideResult = SpriteCutterGameObject.CreateAs( input.gameObject );
-				if ( spriteRenderer != null ) {
-					RendererParametersRepresentation tempParameters = new RendererParametersRepresentation();
-					tempParameters.CopyFrom( spriteRenderer );
-					SafeSpriteRendererRemoverBehaviour.get.RemoveAndWaitOneFrame( spriteRenderer, onFinish: () => {
-						PrepareResultGameObject( firstSideResult, tempParameters,
-						                         meshCutResult.firstSideMesh, collidersCutResults.firstSideColliderRepresentations );
-					} );
-
-				} else {
-					PrepareResultGameObject( firstSideResult, spriteRenderer, meshRenderer,
-					                         meshCutResult.firstSideMesh, collidersCutResults.firstSideColliderRepresentations );
-				}
+				case GameObjectCreationMode.CUT_INTO_TWO:
+					firstSideResult = SpriteCutterGameObject.CreateNew( input.gameObject, true );
+					PrepareResultGameObject( firstSideResult, spriteRenderer, meshRenderer, firstCutData );
+					break;
 			}
 
 			return new SpriteCutterOutput() {
@@ -128,26 +177,26 @@ namespace UnitySpriteCutter {
 		}
 		
 		static void PrepareResultGameObject( SpriteCutterGameObject resultGameObject, SpriteRenderer spriteRenderer,
-		                                            MeshRenderer meshRenderer, Mesh mesh, List<PolygonColliderParametersRepresentation> colliderRepresentations ) {
-			resultGameObject.AssignMeshFilter( mesh );
+		                                     MeshRenderer meshRenderer, SideCutData cutData ) {
+			resultGameObject.AssignMeshFilter( cutData.cuttedMesh );
 			if ( spriteRenderer != null ) {
 				resultGameObject.AssignMeshRendererFrom( spriteRenderer );
 			} else {
 				resultGameObject.AssignMeshRendererFrom( meshRenderer );
 			}
 
-			if ( colliderRepresentations != null ) {
-				resultGameObject.BuildCollidersFrom( colliderRepresentations );
+			if ( cutData.cuttedCollidersRepresentations != null ) {
+				resultGameObject.BuildCollidersFrom( cutData.cuttedCollidersRepresentations );
 			}
 		}
 		
 		static void PrepareResultGameObject( SpriteCutterGameObject resultGameObject, RendererParametersRepresentation tempParameters,
-		                                            Mesh mesh, List<PolygonColliderParametersRepresentation> colliderRepresentations ) {
-			resultGameObject.AssignMeshFilter( mesh );
+		                                     SideCutData cutData ) {
+			resultGameObject.AssignMeshFilter( cutData.cuttedMesh );
 			resultGameObject.AssignMeshRendererFrom( tempParameters );
 			
-			if ( colliderRepresentations != null ) {
-				resultGameObject.BuildCollidersFrom( colliderRepresentations );
+			if ( cutData.cuttedCollidersRepresentations != null ) {
+				resultGameObject.BuildCollidersFrom( cutData.cuttedCollidersRepresentations );
 			}
 		}
 
