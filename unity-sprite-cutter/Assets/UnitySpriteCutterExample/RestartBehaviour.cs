@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class RestartBehaviour : MonoBehaviour {
 
@@ -7,7 +7,7 @@ public class RestartBehaviour : MonoBehaviour {
 	/// Simple restart method triggered by UI.Button.
 	/// </summary>
 	public void RestartScene() {
-		Application.LoadLevel( 0 );
+		SceneManager.LoadScene(0);
 	}
 
 }

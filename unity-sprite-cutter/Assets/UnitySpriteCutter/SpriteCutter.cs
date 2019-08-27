@@ -166,7 +166,7 @@ namespace UnitySpriteCutter {
 
 		static Mesh GetOriginMeshFrom( SpriteRenderer spriteRenderer, MeshRenderer meshRenderer ) {
 			if ( spriteRenderer != null ) {
-				return SpriteMeshConstructor.ConstructFromRendererBounds( spriteRenderer );
+				return SpriteMeshConstructor.ConstructFromRendererBounds_General( spriteRenderer );
 			} else {
 				return meshRenderer.GetComponent<MeshFilter>().mesh;
 			}
