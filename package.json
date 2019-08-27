@@ -1,0 +1,29 @@
+{
+  "name": "com.sabikku.unity-sprite-cutter",
+  "version": "1.0.0",
+  "displayName": "Unity Sprite Cutter",
+  "description": "Simple solution for cutting sprites in your game.",
+  "keywords": [
+    "sprite cutter",
+    "sprite slicing",
+    "unity"
+  ],
+  "category": "Unity",
+  "author": {
+    "name": "Sabikku",
+    "email": "konrad.najlepszy@gmail.com",
+    "url": "https://github.com/sabikku/unity-sprite-cutter"
+  },
+  "files": [
+    "/LICENSE",
+    "/LICENSE.meta",
+    "/README.md",
+    "/README.md.meta",
+    "/package.json",
+    "/package.json.meta",
+    "/Assets/UnitySpriteCutter",
+    "/Assets/UnitySpriteCutter.meta",
+    "/UnitySpriteCutter.asmdef",
+    "/UnitySpriteCutter.asmdef.meta"
+  ]
+}
