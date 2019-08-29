@@ -13,3 +13,14 @@ What it does, exactly, with given GameObject:
 
  - EdgeCollider2D isn't supported.
  - Non-convex Collider2D shapes aren't supported.
+ 
+ 
+# Using Package Manager
+In Unity project folder, open the Packages folder and edit the manifest.json file adding the entry below.
+
+{
+ "dependencies": {
+     "com.sabikku.unity-sprite-cutter": "https://github.com/icaro56/unity-sprite-cutter.git",
+     ...
+ }
+}
