@@ -1,0 +1,12 @@
+{
+    "name": "com.sabikku.unity-sprite-cutter-src",
+    "displayName": "Unity Sprite Cutter Source",
+    "version": "1.0.0",
+    "description": "This package.json is needed in order to avoid circular deps in tests / example project. 'files' property works for remote urls (eg. Github), but not for local file paths",
+    "keywords": [
+        "sprite cutter",
+        "sprite slicing",
+        "unity"
+    ],
+    "category": "Unity"
+}
